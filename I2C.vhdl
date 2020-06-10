@@ -4,7 +4,9 @@ use ieee.numeric_std.all;
 
 entity I2C is
     port(
-        I2C_clk,clk_25Mhz,reset : in std_logic
+        I2C_DATA, I2C_RW, clk , reset, RW : in std_logic;
+        SDA : out std_logic_vector( 7 downto 0);
+        SCL : out std_logic
     );
 end entity;
 
@@ -19,7 +21,7 @@ begin
     -- Filtrar señal de reloj
     clock_filter : process
     begin
-        wait until clk_25Mhz'event and clk_25Mhz = '1'; -- rising_edge(clk)
+        wait until clk'event and clk = '1'; -- rising_edge(clk)
         filter(6 downto 0) <= filter(7 downto 1);
         filter(7) <= I2C_clk;
         if filter = x"FF" then -- "1111111"
