@@ -23,7 +23,7 @@ architecture arch of I2C_tb is
     signal I2C_RW :std_logic;
     signal SDA :std_logic;
     signal SCL :std_logic;
-    constant period : time := 40 ns;
+    constant period : time := 10 us; --100khz *Estandar 
 
 begin
 
@@ -37,7 +37,7 @@ begin
         wait for period/2;
     end process;
 
-    enable <= '1', '0' after 1500 ns;
+    enable <= '1' after 3 us, '0' after 300 us;
     I2C_ADDRESS <= "0110001";
     i2C_DATA <= "01111010";
     I2C_RW <= '0';

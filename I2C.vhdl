@@ -63,7 +63,7 @@ begin
                 SDA <= '1';
                 end if;
 
-            else if  incount < x"B" then --Dos peridodos entre Direccion y data 
+            else if  incount < x"A" then --Dos peridodos entre Direccion y data 
                 incount <= incount + 1;
                 SDA<= '1';
                 present <= ADDR;
@@ -79,7 +79,7 @@ begin
 
         when DATA => 
             SCL <= '0';
-            if incount < x"8" then
+            if incount < x"8" then --Escribir datos 8 bits 
                 SDA <= shift_dat(7);
                 shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
                 incount <= incount + 1;
