@@ -4,41 +4,25 @@ use ieee.numeric_std.all;
 
 entity I2C is
     port(
-        I2C_DATA, I2C_RW, clk , reset, RW : in std_logic;
-        SDA : out std_logic_vector( 7 downto 0);
-        SCL : out std_logic
+        clk: in std_logic;
+        I2C_ADDRESS in std_logic_vector(6 downto 0);
+        I2C_DATA in std_logic_vector(7 downto 0);
+        I2C_RW in std_logic;
+        SDA, SCL : out std_logic
     );
 end entity;
 
 
 architecture arch of I2C is
-    signal I2C_clk_filtered : std_logic;
+    Type State is(IDLE,ADDR,DATA);
+    SIGNAL present:state := IDLE;
     signal incount : unsigned(3 downto 0) := "0000";
-    signal filter : std_logic_vector(z downto 0);
-
 begin
-
-    -- Filtrar señal de reloj
-    clock_filter : process
-    begin
-        wait until clk'event and clk = '1'; -- rising_edge(clk)
-        filter(6 downto 0) <= filter(7 downto 1);
-        filter(7) <= I2C_clk;
-        if filter = x"FF" then -- "1111111"
-            I2C_clk_filtered <= '1';
-        elsif filter = x"00" then  -- "0000000"
-            I2C_clk_filtered <= '0';
-        end if;
-    end process;
-
-
---Corrimiento a derecha, esta solo es la lectura de los 8 data
 
 process (I2C_clk_filtered)
 begin
-if reset = '1' then
+if enable = '1' then
     incount <= x"0";
-
  else 
     if (I2C_clk_filtered'event and I2C_clk_filtered = '0') then --rising_edge(filtered)
     case present is 
