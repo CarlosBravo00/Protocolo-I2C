@@ -38,7 +38,7 @@ begin
     end process;
 
     enable <= '1', '0' after 1500 ns;
-    I2C_ADDRESS <= "0001011";
-    i2C_DATA <= "11001100";
+    I2C_ADDRESS <= "0110001";
+    i2C_DATA <= "01111010";
     I2C_RW <= '0';
 end arch;
