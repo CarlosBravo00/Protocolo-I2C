@@ -4,14 +4,15 @@ use ieee.numeric_std.all;
 
 entity I2C is
     port(
-        I2C_clk,clk_25Mhz : in std_logic
+        I2C_clk,clk_25Mhz,reset : in std_logic
     );
 end entity;
 
 
 architecture arch of I2C is
     signal I2C_clk_filtered : std_logic;
-    signal filter : std_logic_vector(7 downto 0);
+    signal incount : unsigned(3 downto 0) := "0000";
+    signal filter : std_logic_vector(z downto 0);
 
 begin
 
@@ -30,19 +31,36 @@ begin
 
 
 --Corrimiento a derecha, esta solo es la lectura de los 8 data
-    if read_char = '1' then --Validacion para leer 
-        if incount  < x"9" then 
-            incount <= incount + 1;
-            shift_in(7 downto 0) <= shift_in(8 downto 1);
-            shift_in(8) <= keyboard_data;
-            ready_set <= '0';
-        else
-            scan_code <= shift_in(7 downto 0);
-            read_char <= '0';
-            ready_set <= '1';
-            incount <= x"0";
-        end if;
-    end if;
 
+process (I2C_clk_filtered)
+begin
+if reset = '1' then
+    incount <= x"0";
+
+ else 
+    if (I2C_clk_filtered'event and I2C_clk_filtered = '0') then --rising_edge(filtered)
+    case present is 
+
+        when IDLE =>
+            present <= RUN;
+
+      when RUN => -- Shift enl siguientes 8 bits para construir el scan code
+         if incount < x"9" then
+          shift_in(7 downto 0) <= shift_in(8 downto 1);
+          shift_in(8) <= I2C_data;
+          incount <= incount + 1;
+     else 
+        scan_code <= shift_in(7 downto 0);
+        incount <= x"0";
+        present <= IDLE;
+
+    end if;
+        when others => null; 
+        end case;
+         end if;
+
+    end if;
+   end process; 
+   
 
 end arch ; -- arch
