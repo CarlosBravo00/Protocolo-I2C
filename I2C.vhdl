@@ -6,6 +6,7 @@ entity I2C is
     port(
         clk: in std_logic;
         enable: in std_logic;
+        reset: in std_logic; 
         I2C_ADDRESS: in std_logic_vector(6 downto 0);
         I2C_DATA: in std_logic_vector(7 downto 0);
         I2C_RW: in std_logic; --0 Write  1 Read 
@@ -24,6 +25,15 @@ begin
 
 process (clk)
 begin
+    if reset = '1' then 
+            SDA <= '1';
+            SCL <= '1';
+            shift_add <= "0000000";
+            SHIFT_DAT <= "00000000";
+            incount <= x"0";
+            present <= IDLE;
+    else 
+
     if (clk'event and clk = '0') then 
     case present is 
         when IDLE => --Estado inicial SDA=1 & SCL=1
@@ -112,6 +122,8 @@ begin
         end case;
 
          end if;
+
+    end if;
    end process; 
    
 end arch ; -- arch
