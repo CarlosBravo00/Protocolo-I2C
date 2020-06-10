@@ -1,3 +1,2 @@
 # ProyectoFinalSDA
-Implementación de un protocolo de comunicación serial de la industria actual utilizando HDL 
-Hekk
+Implementación del protocolo de comunicación serial I2C
