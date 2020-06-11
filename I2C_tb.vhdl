@@ -1,6 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+
+library std;
+use std.textio.all;
+use ieee.std_logic_textio.all;
+
 entity I2C_tb is
 end entity;
 
@@ -39,15 +44,22 @@ begin
     clk <= not clk after (period / 2);
     
     process
+     variable l : line;
     begin
-        I2C_ADDRESS <= "0110001";
-        i2C_DATA <= "01111010";
-        I2C_RW <= '0';
-        wait for 2*period;
-        enable <= '1';
+        wait for 10*period;
         wait until I2C_BUSY'event and I2C_BUSY = '0';
+           if I2C_BUSY'event and I2C_BUSY = '0' then 
+            write (l, string'("fLAG"));
+            writeline(output, l);
         wait for period;
-        reset <= '1';
-        enable <= '0';
+        end if;
+
+        wait;
+
     end process;
+
+    I2C_ADDRESS <= "0110001";
+    i2C_DATA <= "01111010";
+    I2C_RW <= '0';
+    enable <= '1' after 2*period, '0' after 4*period;
 end arch;
