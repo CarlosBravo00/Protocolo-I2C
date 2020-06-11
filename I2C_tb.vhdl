@@ -15,7 +15,7 @@ architecture arch of I2C_tb is
             I2C_DATA: in std_logic_vector(7 downto 0);
             I2C_RW: in std_logic;
             SDA : inout std_logic; 
-            SCL : out std_logic;
+            SCL : inout std_logic;
             DATA_READ: out std_logic_vector(7 downto 0)
         );
     end component;

@@ -11,14 +11,14 @@ entity I2C is
         I2C_DATA: in std_logic_vector(7 downto 0);
         I2C_RW: in std_logic; --0 Write  1 Read 
         SDA : inout std_logic; --SDA = Serial Data/Address  
-        SCL : out std_logic; --SCL = Serial Clock  
+        SCL : inout std_logic; --SCL = Serial Clock  
         DATA_READ: out std_logic_vector(7 downto 0)
     );
 end entity;
 
 
 architecture arch of I2C is
-    Type State is(IDLE,ADDR,WDATA,TEMP1,TEMP2,RDATA);
+    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2);
     SIGNAL present:state := IDLE;
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
@@ -69,12 +69,10 @@ begin
                 incount <= incount + 1;
 
             else if incount = x"8" then --ACK
-                present <= TEMP1;
-                incount <= incount + 1;
-                if (shift_add = "UUUUUUU") then 
-                SDA <= '1';
+                 if (SCL'event and SCL = '1') then 
+                    incount <= incount + 1;
                 else 
-                SDA <= '0';
+                    present<=ADDR;
                 end if;
 
             else if  incount < x"A" then --Dos peridodos entre Direccion y data 
@@ -104,13 +102,11 @@ begin
                 present <= TEMP2;
 
             else if incount = x"8" then --ACK
-                    if (shift_dat = "UUUUUUUU") then 
-                     SDA <= '1';
-                    else 
-                     SDA <= '0';
-                    end if;
-                present <= TEMP2;
-                incount <= incount + 1;
+                if (SCL'event and SCL = '1') then 
+                    incount <= incount + 1;
+                else 
+                    present<=WDATA;
+                end if; 
 
                 else 
                 incount <= x"0";
@@ -119,7 +115,24 @@ begin
             end if;
 
         WHEN RDATA =>
+            if (SCL'event and SCL = '1') then 
+                if incount < x"8" then
+                    shift_dat(7 downto 0) <= shift_dat(6 downto 0) & SDA;
+                    incount <= incount + 1;
 
+                else if incount = x"8" then --ACK
+                    DATA_READ <= shift_dat;
+                    SDA <= '1';
+                    incount <= incount + 1;
+
+                else 
+                    incount <= x"0";
+                    present <= IDLE;
+                    end if;
+                end if;
+            else 
+                present<=RDATA;
+            end if;
 
         
         when TEMP1 => 
@@ -129,6 +142,7 @@ begin
         when TEMP2 => 
             SCL<= '1';
             present <= WDATA; 
+
 
         when others => null; 
         end case;
