@@ -16,6 +16,7 @@ architecture arch of I2C_tb is
             I2C_RW: in std_logic;
             SDA : inout std_logic; 
             SCL : inout std_logic;
+            I2C_BUSY : out std_logic; 
             DATA_READ: out std_logic_vector(7 downto 0)
         );
     end component;
@@ -27,24 +28,26 @@ architecture arch of I2C_tb is
     signal I2C_RW :std_logic;
     signal SDA :std_logic;
     signal SCL :std_logic;
+    signal I2C_BUSY : std_logic; 
     signal DATA_READ:  std_logic_vector(7 downto 0);
     constant period : time := 10 us; --100khz *Estandar 
 
 begin
 
-    UUT : I2C port map (CLK,enable,reset,I2C_ADDRESS,I2C_DATA,I2C_RW,SDA,SCL,DATA_READ);
-
-    clk_process : process
+    UUT : I2C port map (CLK,enable,reset,I2C_ADDRESS,I2C_DATA,I2C_RW,SDA,SCL,I2C_BUSY,DATA_READ);
+    
+    clk <= not clk after (period / 2);
+    
+    process
     begin
-        clk <= '0';
-        wait for period/2;
-        clk <= '1';
-        wait for period/2;
+        I2C_ADDRESS <= "0110001";
+        i2C_DATA <= "01111010";
+        I2C_RW <= '0';
+        wait for 2*period;
+        enable <= '1';
+        wait until I2C_BUSY'event and I2C_BUSY = '0';
+        wait for period;
+        reset <= '1';
+        enable <= '0';
     end process;
-
-    enable <= '1' after 3 us, '0' after 300 us;
-    --reset <= '1' after 150 us, '0' after 200 us; 
-    I2C_ADDRESS <= "0110001";
-    i2C_DATA <= "01111010";
-    I2C_RW <= '0';
 end arch;

@@ -12,6 +12,7 @@ entity I2C is
         I2C_RW: in std_logic; --0 Write  1 Read 
         SDA : inout std_logic; --SDA = Serial Data/Address  
         SCL : inout std_logic; --SCL = Serial Clock  
+        I2C_BUSY : out std_logic; 
         DATA_READ: out std_logic_vector(7 downto 0)
     );
 end entity;
@@ -23,6 +24,8 @@ architecture arch of I2C is
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
     SIGNAL SIG_RW : std_logic;
+    SIGNAL ACK_FlagADD : std_logic;
+    SIGNAL ACK_FlagDAT : std_logic;
     signal incount : unsigned(3 downto 0) := "0000";
 begin
 
@@ -35,18 +38,20 @@ begin
             SHIFT_DAT <= "00000000";
             incount <= x"0";
             present <= IDLE;
+            I2C_BUSY <= '0';
     else 
     
     if (clk'event and clk = '0') then 
     case present is 
         when IDLE => --Estado inicial SDA=1 & SCL=1
-
+            
+             I2C_BUSY <= '0';
              SDA <= '1';
              SCL <= '1';
-             shift_add <= "0000000";
-             SHIFT_DAT <= "00000000";
 
             if enable = '1' then
+                I2C_BUSY <= '1';
+                SDA <='0'; 
                 present <= ADDR;
                 shift_add <= I2C_ADDRESS; --Carga de direccion
                 SHIFT_DAT <= I2C_DATA;  --carga de data 
@@ -62,20 +67,25 @@ begin
                 shift_add(6 downto 0) <= shift_add(5 downto 0) & 'U' ;
                 incount <= incount + 1;
                 present <= TEMP1;
+                I2C_BUSY <= '1';
 
             else if incount = x"7" then --RW 1 bit 
                 SDA <= SIG_RW;
                 present <= TEMP1;
                 incount <= incount + 1;
+                I2C_BUSY <= '1';
 
             else if incount = x"8" then --ACK
-                 if (SCL'event and SCL = '1') then 
-                    incount <= incount + 1;
-                else 
-                    present<=ADDR;
-                end if;
+                I2C_BUSY <= '0';
+                    if (SCL'event and SCL = '1') then 
+                        ack_flagADD <= SDA;
+                        incount <= incount + 1;
+                    else 
+                        present<=ADDR;
+                    end if;
 
             else if  incount < x"A" then --Dos peridodos entre Direccion y data 
+                I2C_BUSY <= '1';
                 incount <= incount + 1;
                 SDA<= '1';
                 present <= ADDR;
@@ -102,7 +112,9 @@ begin
                 present <= TEMP2;
 
             else if incount = x"8" then --ACK
+                I2C_BUSY <= '0';
                 if (SCL'event and SCL = '1') then 
+                    ACK_flagDAT <= SDA;
                     incount <= incount + 1;
                 else 
                     present<=WDATA;
@@ -115,6 +127,7 @@ begin
             end if;
 
         WHEN RDATA =>
+               I2C_BUSY <= '0';
             if (SCL'event and SCL = '1') then 
                 if incount < x"8" then
                     shift_dat(7 downto 0) <= shift_dat(6 downto 0) & SDA;
@@ -126,6 +139,7 @@ begin
                     incount <= incount + 1;
 
                 else 
+                   I2C_BUSY <= '1';
                     incount <= x"0";
                     present <= IDLE;
                     end if;
