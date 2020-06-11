@@ -10,16 +10,19 @@ entity I2C is
         I2C_ADDRESS: in std_logic_vector(6 downto 0);
         I2C_DATA: in std_logic_vector(7 downto 0);
         I2C_RW: in std_logic; --0 Write  1 Read 
-        SDA, SCL : out std_logic --SDA = Serial Data  SCL = Serial Clock
+        SDA : inout std_logic; --SDA = Serial Data/Address  
+        SCL : out std_logic; --SCL = Serial Clock  
+        DATA_READ: out std_logic_vector(7 downto 0)
     );
 end entity;
 
 
 architecture arch of I2C is
-    Type State is(IDLE,ADDR,DATA,TEMP1,TEMP2);
+    Type State is(IDLE,ADDR,WDATA,TEMP1,TEMP2,RDATA);
     SIGNAL present:state := IDLE;
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
+    SIGNAL SIG_RW : std_logic;
     signal incount : unsigned(3 downto 0) := "0000";
 begin
 
@@ -33,7 +36,7 @@ begin
             incount <= x"0";
             present <= IDLE;
     else 
-
+    
     if (clk'event and clk = '0') then 
     case present is 
         when IDLE => --Estado inicial SDA=1 & SCL=1
@@ -47,6 +50,7 @@ begin
                 present <= ADDR;
                 shift_add <= I2C_ADDRESS; --Carga de direccion
                 SHIFT_DAT <= I2C_DATA;  --carga de data 
+                SIG_RW <= I2C_RW; -- Carga de RW
             else 
                present <= IDLE;
             end if;
@@ -60,7 +64,7 @@ begin
                 present <= TEMP1;
 
             else if incount = x"7" then --RW 1 bit 
-                SDA <= I2C_RW;
+                SDA <= SIG_RW;
                 present <= TEMP1;
                 incount <= incount + 1;
 
@@ -68,9 +72,9 @@ begin
                 present <= TEMP1;
                 incount <= incount + 1;
                 if (shift_add = "UUUUUUU") then 
-                SDA <= '0';
-                else 
                 SDA <= '1';
+                else 
+                SDA <= '0';
                 end if;
 
             else if  incount < x"A" then --Dos peridodos entre Direccion y data 
@@ -80,14 +84,18 @@ begin
 
             else 
                 incount <= x"0";
-                present<= DATA;   
+                if SIG_RW = '0' then 
+                present<= WDATA;   
+                else 
+                present<= RDATA;
+                end if;
                 
                 end if;       
             end if;
           end if;
          end if;
 
-        when DATA => 
+        when WDATA => 
             SCL <= '0';
             if incount < x"8" then --Escribir datos 8 bits 
                 SDA <= shift_dat(7);
@@ -97,9 +105,9 @@ begin
 
             else if incount = x"8" then --ACK
                     if (shift_dat = "UUUUUUUU") then 
-                     SDA <= '0';
-                    else 
                      SDA <= '1';
+                    else 
+                     SDA <= '0';
                     end if;
                 present <= TEMP2;
                 incount <= incount + 1;
@@ -109,6 +117,10 @@ begin
                 present <= IDLE;
                 end if;
             end if;
+
+        WHEN RDATA =>
+
+
         
         when TEMP1 => 
             SCL<= '1';
@@ -116,7 +128,7 @@ begin
 
         when TEMP2 => 
             SCL<= '1';
-            present <= data; 
+            present <= WDATA; 
 
         when others => null; 
         end case;
