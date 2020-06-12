@@ -24,8 +24,8 @@ architecture arch of I2C is
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
     SIGNAL SIG_RW : std_logic;
-    SIGNAL ACK_FlagADD : std_logic;
-    SIGNAL ACK_FlagDAT : std_logic;
+    SIGNAL ACK_FlagADD : std_logic := '1';
+    SIGNAL ACK_FlagDAT : std_logic := '1';
     signal incount : unsigned(3 downto 0) := "0000";
 begin
 
@@ -63,7 +63,7 @@ begin
         when ADDR => --Direccion y RW
 
             if incount < x"7" then --Direccion 7 bits 
-                  SCL <= '0';
+                SCL <= '0';
                 SDA <= shift_add(6);
                 shift_add(6 downto 0) <= shift_add(5 downto 0) & 'U' ;
                 incount <= incount + 1;
@@ -71,7 +71,7 @@ begin
                 I2C_BUSY <= '1';
 
             else if incount = x"7" then --RW 1 bit 
-                 SCL <= '0';
+                SCL <= '0';
                 SDA <= SIG_RW;
                 present <= TEMP1;
                 incount <= incount + 1;
@@ -108,7 +108,7 @@ begin
             end if;
           end if;
         end if;
-    end if;
+     end if;
 
         when SACK =>
             if (SCL = '1') then 
@@ -154,7 +154,7 @@ begin
                 present <= IDLE;
                 end if;
             end if;
-        end if;
+         end if;
 
         WHEN RDATA =>
                I2C_BUSY <= '0';
