@@ -19,7 +19,7 @@ end entity;
 
 
 architecture arch of I2C is
-    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2);
+    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2,SACK,WSACK);
     SIGNAL present:state := IDLE;
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
@@ -38,14 +38,14 @@ begin
             SHIFT_DAT <= "00000000";
             incount <= x"0";
             present <= IDLE;
-            I2C_BUSY <= '0';
+            I2C_BUSY <= '1';
     else 
     
     if (clk'event and clk = '0') then 
     case present is 
         when IDLE => --Estado inicial SDA=1 & SCL=1
             
-             I2C_BUSY <= '0';
+             I2C_BUSY <= '1';
              SDA <= '1';
              SCL <= '1';
 
@@ -61,8 +61,9 @@ begin
             end if;
 
         when ADDR => --Direccion y RW
-            SCL <= '0';
+
             if incount < x"7" then --Direccion 7 bits 
+                  SCL <= '0';
                 SDA <= shift_add(6);
                 shift_add(6 downto 0) <= shift_add(5 downto 0) & 'U' ;
                 incount <= incount + 1;
@@ -70,27 +71,32 @@ begin
                 I2C_BUSY <= '1';
 
             else if incount = x"7" then --RW 1 bit 
+                 SCL <= '0';
                 SDA <= SIG_RW;
                 present <= TEMP1;
                 incount <= incount + 1;
                 I2C_BUSY <= '1';
 
             else if incount = x"8" then --ACK
-                I2C_BUSY <= '0';
-                    if (SCL'event and SCL = '1') then 
-                        ack_flagADD <= SDA;
-                        incount <= incount + 1;
-                    else 
-                        present<=ADDR;
-                    end if;
-
-            else if  incount < x"A" then --Dos peridodos entre Direccion y data 
-                I2C_BUSY <= '1';
                 incount <= incount + 1;
+                SCL<='0';
+                present <= ADDR;
+
+            else if incount = x"9" then --ACK
+                I2C_BUSY <= '0';
+                SDA<= 'Z';
+                SCL<='Z';
+                present <= SACK;
+            
+            else if incount < x"B" then --Count 
+                I2C_BUSY <= '1';
                 SDA<= '1';
+                incount <= incount + 1;
+                SCL<='0';
                 present <= ADDR;
 
             else 
+                SCL <= '0';
                 incount <= x"0";
                 if SIG_RW = '0' then 
                 present<= WDATA;   
@@ -101,30 +107,54 @@ begin
                 end if;       
             end if;
           end if;
-         end if;
+        end if;
+    end if;
+
+        when SACK =>
+            if (SCL = '1') then 
+                ack_flagADD <= SDA;
+                incount <= incount + 1;
+                present<=ADDR;
+            else 
+                present<=SACK;
+            end if;
+
+            when WSACK =>
+            if (SCL = '1') then 
+                ack_flagADD <= SDA;
+                incount <= incount + 1;
+                present<=WDATA;
+            else 
+                present<=WSACK;
+            end if;
+                
 
         when WDATA => 
-            SCL <= '0';
             if incount < x"8" then --Escribir datos 8 bits 
+                SCL <= '0';
                 SDA <= shift_dat(7);
                 shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
                 incount <= incount + 1;
                 present <= TEMP2;
 
             else if incount = x"8" then --ACK
-                I2C_BUSY <= '0';
-                if (SCL'event and SCL = '1') then 
-                    ACK_flagDAT <= SDA;
-                    incount <= incount + 1;
-                else 
-                    present<=WDATA;
-                end if; 
+                incount <= incount + 1;
+                SCL<='0';
+                present <= WDATA;
 
-                else 
+            else if incount = x"9" then --ACK
+                I2C_BUSY <= '0';
+                SDA<= 'Z';
+                SCL<='Z';
+                present <= WSACK;
+             else 
+                SDA<= '0';
+                I2C_BUSY <= '1';
                 incount <= x"0";
                 present <= IDLE;
                 end if;
             end if;
+        end if;
 
         WHEN RDATA =>
                I2C_BUSY <= '0';

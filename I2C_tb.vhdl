@@ -35,6 +35,7 @@ architecture arch of I2C_tb is
     signal SCL :std_logic;
     signal I2C_BUSY : std_logic; 
     signal DATA_READ:  std_logic_vector(7 downto 0);
+    signal DATA_OUT : std_logic;
     constant period : time := 10 us; --100khz *Estandar 
 
 begin
@@ -43,23 +44,31 @@ begin
     
     clk <= not clk after (period / 2);
     
-    process
+process
      variable l : line;
     begin
+        data_out <= '1';
         wait for 10*period;
         wait until I2C_BUSY'event and I2C_BUSY = '0';
-           if I2C_BUSY'event and I2C_BUSY = '0' then 
+            wait for 2*period;
+            data_out <= '0';
             write (l, string'("fLAG"));
             writeline(output, l);
-        wait for period;
-        end if;
-
+            wait for 2*period;
+            data_out <= '1';
+         wait until I2C_BUSY'event and I2C_BUSY = '0';
+            data_out <= '0';
+            write (l, string'("fLAG"));
+            writeline(output, l);
+            wait for period;
+            data_out <= '1';
         wait;
-
     end process;
-
+    SCL <= data_out when (I2C_BUSY'event and I2C_BUSY = '0') else 'Z';
+    SDA <= '1' when (I2C_BUSY'event and I2C_BUSY = '0') else 'Z';
     I2C_ADDRESS <= "0110001";
     i2C_DATA <= "01111010";
     I2C_RW <= '0';
-    enable <= '1' after 2*period, '0' after 4*period;
+    enable <= '1' after 4*period, '0' after 8*period;
+
 end arch;
