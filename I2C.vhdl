@@ -11,7 +11,7 @@ entity I2C is
         I2C_DATA: in std_logic_vector(7 downto 0);
         I2C_RW: in std_logic; --0 Write  1 Read 
         SDA : inout std_logic; --SDA = Serial Data/Address  
-        SCL : inout std_logic; --SCL = Serial Clock  
+        SCL : out std_logic; --SCL = Serial Clock  
         I2C_BUSY : out std_logic; 
         DATA_READ: out std_logic_vector(7 downto 0)
     );
@@ -19,7 +19,7 @@ end entity;
 
 
 architecture arch of I2C is
-    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2,SACK,WSACK);
+    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2,TEMP3,SACK,WSACK);
     SIGNAL present:state := IDLE;
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
@@ -78,14 +78,9 @@ begin
                 I2C_BUSY <= '1';
 
             else if incount = x"8" then --ACK
-                incount <= incount + 1;
-                SCL<='0';
-                present <= ADDR;
-
-            else if incount = x"9" then --ACK
                 I2C_BUSY <= '0';
                 SDA<= 'Z';
-                SCL<='Z';
+                SCL<='0';
                 present <= SACK;
             
             else if incount < x"B" then --Count 
@@ -99,34 +94,29 @@ begin
                 SCL <= '0';
                 incount <= x"0";
                 if SIG_RW = '0' then 
-                present<= WDATA;   
+                    present<= WDATA;   
                 else 
-                present<= RDATA;
+                    I2C_BUSY <= '0';
+                    SDA <= 'Z';
+                    present<= RDATA;
                 end if;
                 
                 end if;       
             end if;
           end if;
         end if;
-     end if;
 
         when SACK =>
-            if (SCL = '1') then 
                 ack_flagADD <= SDA;
                 incount <= incount + 1;
                 present<=ADDR;
-            else 
-                present<=SACK;
-            end if;
+                SCL<='1';
 
-            when WSACK =>
-            if (SCL = '1') then 
+        when WSACK =>
                 ack_flagADD <= SDA;
                 incount <= incount + 1;
                 present<=WDATA;
-            else 
-                present<=WSACK;
-            end if;
+                SCL<='1';
                 
 
         when WDATA => 
@@ -138,47 +128,44 @@ begin
                 present <= TEMP2;
 
             else if incount = x"8" then --ACK
-                incount <= incount + 1;
-                SCL<='0';
-                present <= WDATA;
-
-            else if incount = x"9" then --ACK
                 I2C_BUSY <= '0';
                 SDA<= 'Z';
-                SCL<='Z';
+                SCL<='0';
                 present <= WSACK;
              else 
-                SDA<= '0';
+                SCL<='1';
+                SDA<= '1';
                 I2C_BUSY <= '1';
                 incount <= x"0";
                 present <= IDLE;
                 end if;
             end if;
-         end if;
 
         WHEN RDATA =>
-               I2C_BUSY <= '0';
-            if (SCL'event and SCL = '1') then 
                 if incount < x"8" then
+                    SCL <= '0';
                     shift_dat(7 downto 0) <= shift_dat(6 downto 0) & SDA;
                     incount <= incount + 1;
+                    present <= TEMP3;
 
                 else if incount = x"8" then --ACK
+                    SCL <= '0';
+                    I2C_BUSY <= '1';
                     DATA_READ <= shift_dat;
                     SDA <= '1';
                     incount <= incount + 1;
-
+                    present <= TEMP3;
                 else 
                    I2C_BUSY <= '1';
                     incount <= x"0";
                     present <= IDLE;
                     end if;
                 end if;
-            else 
-                present<=RDATA;
-            end if;
 
-        
+        when TEMP3 =>
+            SCL<= '1';
+            present <= RDATA; 
+                    
         when TEMP1 => 
             SCL<= '1';
             present <= ADDR; 
