@@ -19,7 +19,7 @@ end entity;
 
 
 architecture arch of I2C is
-    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2,SACK,WSACK);
+    Type State is(IDLE,ADDR,WDATA,RDATA,TEMP1,TEMP2,TEMP3,SACK,WSACK);
     SIGNAL present:state := IDLE;
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);
@@ -94,9 +94,11 @@ begin
                 SCL <= '0';
                 incount <= x"0";
                 if SIG_RW = '0' then 
-                present<= WDATA;   
+                    present<= WDATA;   
                 else 
-                present<= RDATA;
+                    I2C_BUSY <= '0';
+                    SDA <= 'Z';
+                    present<= RDATA;
                 end if;
                 
                 end if;       
@@ -140,16 +142,19 @@ begin
             end if;
 
         WHEN RDATA =>
-               I2C_BUSY <= '0';
                 if incount < x"8" then
+                    SCL <= '0';
                     shift_dat(7 downto 0) <= shift_dat(6 downto 0) & SDA;
                     incount <= incount + 1;
+                    present <= TEMP3;
 
                 else if incount = x"8" then --ACK
+                    SCL <= '0';
                     I2C_BUSY <= '1';
                     DATA_READ <= shift_dat;
                     SDA <= '1';
                     incount <= incount + 1;
+                    present <= TEMP3;
                 else 
                    I2C_BUSY <= '1';
                     incount <= x"0";
@@ -157,7 +162,10 @@ begin
                     end if;
                 end if;
 
-        
+        when TEMP3 =>
+            SCL<= '1';
+            present <= RDATA; 
+                    
         when TEMP1 => 
             SCL<= '1';
             present <= ADDR; 
