@@ -20,7 +20,7 @@ architecture arch of I2C_tb is
             I2C_DATA: in std_logic_vector(7 downto 0);
             I2C_RW: in std_logic;
             SDA : inout std_logic; 
-            SCL : inout std_logic;
+            SCL : out std_logic;
             I2C_BUSY : out std_logic; 
             DATA_READ: out std_logic_vector(7 downto 0)
         );
@@ -35,8 +35,8 @@ architecture arch of I2C_tb is
     signal SCL :std_logic;
     signal I2C_BUSY : std_logic; 
     signal DATA_READ:  std_logic_vector(7 downto 0);
-    signal CLOCK_SLV : std_logic;
     signal DATA_SLV : std_logic;
+    signal RD_DATA : std_logic_vector(7 downto 0);
     constant period : time := 10 us; --100khz *Estandar 
 
 begin
@@ -48,29 +48,24 @@ begin
 process
      variable l : line;
     begin
-        CLOCK_SLV <= '1';
         DATA_SLV <= '1';
-        wait for 10*period;
-     wait until I2C_BUSY'event and I2C_BUSY = '0';
-            wait for 2*period;
-            CLOCK_SLV <= '0';
-            write (l, string'("fLAG"));
-            writeline(output, l);
-            wait for 2*period;
-            CLOCK_SLV <= '1';
-         wait until I2C_BUSY'event and I2C_BUSY = '0';
-            CLOCK_SLV <= '0';
-            write (l, string'("fLAG"));
-            writeline(output, l);
-            wait for period;
-            CLOCK_SLV <= '1';
+        wait until I2C_BUSY'event and I2C_BUSY = '0';
+        wait for period;
+        wait until I2C_BUSY'event and I2C_BUSY = '0' and I2C_RW = '1';
+        for i in 0 to 7 loop
+            DATA_SLV<= RD_DATA(7-i);
+            wait until SCL'event and SCL = '1';
+        end loop;
+
+
         wait;
     end process;
-    SCL <= CLOCK_SLV when (I2C_BUSY'event and I2C_BUSY = '0') else 'Z';
-    SDA <= DATA_SLV when (I2C_BUSY'event and I2C_BUSY = '0') else 'Z';
+
+    SDA <= DATA_SLV when (I2C_BUSY = '0') else 'Z';
     I2C_ADDRESS <= "0110001";
+    RD_DATA <= "11110000";
     i2C_DATA <= "01111010";
-    I2C_RW <= '0';
+    I2C_RW <= '1';
     enable <= '1' after 4*period, '0' after 8*period;
 
 end arch;
