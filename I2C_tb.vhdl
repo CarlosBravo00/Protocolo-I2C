@@ -1,11 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
-library std;
-use std.textio.all;
-use ieee.std_logic_textio.all;
-
 entity I2C_tb is
 end entity;
 
@@ -46,15 +41,14 @@ begin
     clk <= not clk after (period / 2);
     
 process
-     variable l : line;
     begin
         DATA_SLV <= '1';
-        wait until I2C_BUSY'event and I2C_BUSY = '0';
+        wait until I2C_BUSY'event and I2C_BUSY = '0'; --ACK de Address
         wait for period;
-        wait until I2C_BUSY'event and I2C_BUSY = '0' and I2C_RW = '1';
+        wait until I2C_BUSY'event and I2C_BUSY = '0' and I2C_RW = '1'; 
         for i in 0 to 7 loop
-            DATA_SLV<= RD_DATA(7-i);
-            wait until SCL'event and SCL = '1';
+            DATA_SLV<= RD_DATA(7-i); --Si es lectura manda la informacion de leer
+            wait until SCL'event and SCL = '0';
         end loop;
 
 
@@ -63,9 +57,9 @@ process
 
     SDA <= DATA_SLV when (I2C_BUSY = '0') else 'Z';
     I2C_ADDRESS <= "0110001";
-    RD_DATA <= "11110000";
-    i2C_DATA <= "01111010";
+    I2C_DATA <= "01111010";
     I2C_RW <= '1';
+    RD_DATA <= "11010010";
     enable <= '1' after 4*period, '0' after 8*period;
 
 end arch;
