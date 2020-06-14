@@ -4,9 +4,9 @@ use ieee.numeric_std.all;
 
 entity I2C_SLV is
     port(
-        I2C_ADDRESS: in std_logic_vector(6 downto 0); --Direccion del esclavo 
-        I2C_DATA: in std_logic_vector(7 downto 0); --Data en el esclavo
-        DATA_WRITE: out std_logic_vector(7 downto 0); --Data que recive el esclavo
+        I2C_ADDRESS: in std_logic_vector(6 downto 0); --Dirección del Esclavo 
+        I2C_DATA: in std_logic_vector(7 downto 0); --Data del Esclavo
+        DATA_WRITE: out std_logic_vector(7 downto 0); --Data que recibe el Esclavo
         SCL: in std_logic;--SCL = Serial Clock 
         SDA : inout std_logic; --SDA = Serial Data/Address  
         SLV_BUSY: out std_logic := '1'  --1 Busy,0 Espera respuesta
