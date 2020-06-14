@@ -12,7 +12,7 @@ entity I2C is
         I2C_RW: in std_logic; --0 Write  1 Read 
         SDA : inout std_logic; --SDA = Serial Data/Address  
         SCL : out std_logic; --SCL = Serial Clock  
-        I2C_BUSY : out std_logic; --1 Busy , 0 Espera respuesta
+        I2C_BUSY : out std_logic; --1 Busy,0 Espera respuesta
         DATA_READ: out std_logic_vector(7 downto 0)
     );
 end entity;
@@ -53,8 +53,8 @@ if (clk'event and clk = '0') then
                 I2C_BUSY <= '1';
                 SDA <='0'; 
                 shift_add <= I2C_ADDRESS; --Carga de direccion
-                SHIFT_DAT <= I2C_DATA;  --carga de data 
-                SIG_RW <= I2C_RW; -- Carga de RW
+                SHIFT_DAT <= I2C_DATA;  --Carga de data 
+                SIG_RW <= I2C_RW; --Carga de RW
                 present <= ADDR;
             else 
                present <= IDLE;
