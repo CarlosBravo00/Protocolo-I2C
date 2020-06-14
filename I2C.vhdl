@@ -191,4 +191,4 @@ if (clk'event and clk = '0') then
     end if;
    end process; 
    
-end arch ; -- arch
+end arch ; --arch
