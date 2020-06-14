@@ -47,7 +47,7 @@ process
         wait until I2C_BUSY'event and I2C_BUSY = '0'; --ACK de Address
         wait for period;
         wait until I2C_BUSY'event and I2C_BUSY = '0' and I2C_RW = '1';
---SIMULACION DEL ESCLAVO--READ---------------------------------------------------
+--SIMULACIÓN DEL ESCLAVO--READ---------------------------------------------------
         for i in 0 to 7 loop
             DATA_SLV<= RD_DATA(7-i); --Si es lectura manda la informacion de leer
             wait until SCL'event and SCL = '0';
