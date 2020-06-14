@@ -9,7 +9,7 @@ entity I2C is
         reset: in std_logic; 
         I2C_ADDRESS: in std_logic_vector(6 downto 0);
         I2C_DATA: in std_logic_vector(7 downto 0);
-        I2C_RW: in std_logic; --0 Write  1 Read 
+        I2C_RW: in std_logic; --0 Write 1 Read 
         SDA : inout std_logic; --SDA = Serial Data/Address  
         SCL : out std_logic; --SCL = Serial Clock  
         I2C_BUSY : out std_logic; --1 Busy,0 Espera respuesta
