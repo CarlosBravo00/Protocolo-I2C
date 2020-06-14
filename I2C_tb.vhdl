@@ -28,7 +28,7 @@ architecture arch of I2C_tb is
     signal I2C_RW :std_logic;
     signal SDA :std_logic;
     signal SCL :std_logic;
-    signal I2C_BUSY : std_logic;
+    signal I2C_BUSY : std_logic := '0';
     signal DATA_READ:  std_logic_vector(7 downto 0);
     signal DATA_SLV : std_logic;
     signal RD_DATA : std_logic_vector(7 downto 0);
@@ -47,7 +47,7 @@ process
         wait until I2C_BUSY'event and I2C_BUSY = '0'; --ACK de Address
         wait for period;
         wait until I2C_BUSY'event and I2C_BUSY = '0' and I2C_RW = '1';
---SIMULACIÓN DEL ESCLAVO--READ---------------------------------------------------
+--SIMULACION DEL ESCLAVO--READ---------------------------------------------------
         for i in 0 to 7 loop
             DATA_SLV<= RD_DATA(7-i); --Si es lectura manda la informacion de leer
             wait until SCL'event and SCL = '0';
@@ -58,11 +58,14 @@ process
     end process;
 
     SDA <= DATA_SLV when (I2C_BUSY = '0') else 'Z';
+    enable <= '1' after 4*period, '0' after 8*period;
+    
     I2C_ADDRESS <= "0110001";
     I2C_DATA <= "01111010";
     I2C_RW <= '1';
     RD_DATA <= "11010010";
-    enable <= '1' after 4*period, '0' after 8*period;
+
+    --Output consola = DATA_READ
 ------------------------------------------------------------
 
 end arch;

@@ -97,6 +97,7 @@ if (clk'event and clk = '0') then
                 if SIG_RW = '0' then --Write Data
                     present<= WDATA;   
                 else  --Read Data
+                    SHIFT_DAT <= "UUUUUUUU";
                     I2C_BUSY <= '0'; 
                     SDA <= 'Z';
                     present<= RDATA;

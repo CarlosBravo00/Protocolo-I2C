@@ -1,7 +1,13 @@
 v 4
-file . "I2C_tb.vhdl" "5675d028e1f08edd96d56c6e4d02a2ce6d254b42" "20200613013343.920":
-  entity i2c_tb at 1( 0) + 0 on 785;
-  architecture arch of i2c_tb at 7( 80) + 0 on 786;
+file . "I2C_tb.vhdl" "94f5e9178ec78e216ab1d4c1c7cceda282fabb6e" "20200614170729.420":
+  entity i2c_tb at 1( 0) + 0 on 987;
+  architecture arch of i2c_tb at 7( 80) + 0 on 988;
 file . "I2C.vhdl" "10230d9f390feaf843f8da680e5f8e66616ced41" "20200613013341.782":
   entity i2c at 1( 0) + 0 on 783;
   architecture arch of i2c at 21( 605) + 0 on 784;
+file . "I2C_SLV.vhdl" "558d152cc249761fb06808bf431c262c14197534" "20200614171937.807":
+  entity i2c_slv at 1( 0) + 0 on 1015;
+  architecture arch of i2c_slv at 17( 553) + 0 on 1016;
+file . "I2C_SLV_tb.vhdl" "e0c6edbf51f1b6a80333f04a508f757b0c4e301f" "20200614171939.567":
+  entity i2c_slv_tb at 1( 0) + 0 on 1017;
+  architecture arch of i2c_slv_tb at 7( 84) + 0 on 1018;
