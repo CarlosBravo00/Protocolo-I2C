@@ -38,6 +38,7 @@ begin
 
     UUT : I2C port map (CLK,enable,reset,I2C_ADDRESS,I2C_DATA,I2C_RW,SDA,SCL,I2C_BUSY,DATA_READ);
 
+--Cambio en el periodo--
     clk <= not clk after (period / 2);
 
 process
