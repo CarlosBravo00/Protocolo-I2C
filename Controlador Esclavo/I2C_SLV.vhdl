@@ -20,8 +20,8 @@ architecture arch of I2C_SLV  is
     SIGNAL SHIFT_ADD: Std_logic_vector(6 downto 0);--Guarda infor de ADDRESS
     SIGNAL SIG_RW : std_logic; --Guarda infor de RW
     SIGNAL SHIFT_DAT: Std_logic_vector(7 downto 0);--Guarda infor de DATA
-    SIGNAL SDA_INPUT:std_logic :='0';
     signal incount : unsigned(3 downto 0) := "0000"; --Conteo Interno 
+    SIGNAL SDA_INPUT:std_logic :='0';
     SIGNAL BUSY_SIGNAL  :std_logic :='0';
 begin
  
@@ -47,19 +47,18 @@ begin
                     present <= ADDR; 
 
                 else if incount = x"7" then --RW 1 bit 
-                    if (shift_add = I2C_ADDRESS) then 
-               ---SI LA DIRECCION SENT NO COINCIDE CON LA DEL ESCLAVO REGRESA A IDDLE---            
-                        SIG_RW <= SDA;
-                        incount <= incount + 1;
-                        present <= ADDR;
+                        if (shift_add = I2C_ADDRESS) then  ---SI LA DIRECCION SENT NO COINCIDE CON LA DEL ESCLAVO REGRESA A IDDLE---           
+                            SIG_RW <= SDA;
+                            incount <= incount + 1;
+                            present <= ADDR;
 
-                        BUSY_SIGNAL <= '1';
-                        SDA_INPUT<= '1';
-                    else 
-                        present <= IDLE;
-                    end if;
+                            BUSY_SIGNAL <= '1'; 
+                            SDA_INPUT<= '1'; --ACK 
+                        else 
+                            present <= IDLE;
+                        end if;
 
-                else --ACK
+                else 
                     incount <= x"0";
                     BUSY_SIGNAL <= '0';
                     if SIG_RW = '0' then --Write Data
@@ -67,7 +66,7 @@ begin
                         BUSY_SIGNAL <= '0';
                         shift_add <= "UUUUUUU";
                         present<= WDATA; 
-                    else  --Read Data
+                    else                 --Read Data
                         BUSY_SIGNAL <= '1';
                         SDA_INPUT<= '1';
                         shift_dat <= I2C_DATA;
@@ -79,50 +78,49 @@ begin
 
         when WDATA => 
             if incount < x"7" then --Escribir datos 8 bits 
-            BUSY_SIGNAL <= '0';
+                 BUSY_SIGNAL <= '0';
                 SHIFT_DAT(7 downto 0) <= shift_dat(6 downto 0) & SDA;
                 incount <= incount + 1;
                 present <= WDATA;
 
-            else if incount = x"7" then --ACK
+            else if incount = x"7" then 
                 SHIFT_DAT(7 downto 0) <= shift_dat(6 downto 0) & SDA;
                 incount <= incount + 1;
                 present <= WDATA;
-                BUSY_SIGNAL <= '1';
-                SDA_INPUT<= '1';
+                BUSY_SIGNAL <= '1'; 
+                SDA_INPUT<= '1'; --ACK
 
             else if incount = x"8" then 
-               BUSY_SIGNAL <= '0';
-               SDA_INPUT<= '0';
-                DATA_WRITE <=  SHIFT_DAT;
-            --    SDA<= '1'; 
-                incount <= x"0";
-                present <= IDLE;
+                BUSY_SIGNAL <= '0';
+                SDA_INPUT<= '0';
+                DATA_WRITE <=  SHIFT_DAT; --Carga la informacion en el out
+                    if ( SDA = '1') then --Stop bit 
+                        incount <= x"0";
+                        present <= IDLE;
+                    else 
+                        present<=WDATA;
+                    end if;
                 end if;
             end if;  
         end if; 
 
 
          WHEN RDATA => --Read data
-             if incount < x"8" then --Lecutra de la data manda esclavo
+             if incount < x"8" then --Esclavo manda data 
                 SDA_INPUT <= shift_dat(7);
                 shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
                 incount <= incount + 1;
                 present <= RDATA;
             
-            else if incount = x"8" then 
+            else if incount = x"8" then  --Espera ACK de Master 
                 SDA_INPUT <= shift_dat(7);
                 shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
                 incount <= incount + 1;
                 present <= RDATA;
                 BUSY_SIGNAL <= '0';
 
-            --  else if incount = x"9" then --ACK
-            --      incount <= incount + 1;
-            --      present <= RDATA;
-
-             else  --STOP regresa a iddle 
-                 if (SDA = '1') then --stop bit 
+             else  
+                 if (SDA = '1') then --Stop Bit 
                         incount <= x"0";
                          present <= IDLE;
                      else
@@ -131,7 +129,6 @@ begin
 
                  end if;
              end if;
-        -- end if;
                 
         when others => null; 
         end case;
@@ -140,8 +137,8 @@ begin
 
     end process;
 
-    SLV_BUSY<=BUSY_SIGNAL;
+    SLV_BUSY<=BUSY_SIGNAL;  --Carga señal de busy 
 
-    SDA <= SDA_INPUT when (BUSY_SIGNAL = '1') else 'Z';
+    SDA <= SDA_INPUT when (BUSY_SIGNAL = '1') else 'Z'; --Hace SDA input cuando se requiera
     
 end arch ; --arch

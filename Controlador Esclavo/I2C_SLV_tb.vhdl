@@ -59,14 +59,14 @@ process
         DATA_MASTER <= SENT_RW;
         wait for (period / 2);
         SCL <= '1'; 
-        wait for (period / 2);
+        wait for (period / 2);--Espera ACK
         SCL <= '0'; 
         wait for (period / 2);
         SCL <= '1'; 
         wait for (period / 2);
         SCL <= '0'; 
         wait for period;
-        for i in 0 to 7 loop --Data
+        for i in 0 to 7 loop --Data O Espera recivir 
             DATA_MASTER<= SENT_DATA(7-i); 
             wait for (period / 2);
             SCL <= '1'; 
@@ -76,13 +76,13 @@ process
         wait for (period / 2);
         SCL <= '1'; 
         DATA_MASTER<='1';
-        if (SENT_RW = '1') then 
+        if (SENT_RW = '1') then --ACK Master si se hace lectura 
             wait for (period / 2);
             SCL <= '0'; 
             wait for (period / 2);
             SCL <= '1'; 
         end if; 
-        wait for (period / 2);
+        wait for (period / 2); --Stop bit 
         SCL <= '0'; 
         wait for (period / 2);
         SCL <= '1'; 
@@ -102,11 +102,11 @@ process
         readline(fin, current_read_line);
         read(current_read_line, current_read_field);
         read(current_read_line, current_read_dataADD);
-            I2C_ADDRESS <= current_read_dataADD; 
+            I2C_ADDRESS <= current_read_dataADD;  --Leer Address del esclavo
         readline(fin, current_read_line);
         read(current_read_line, current_read_field);
         read(current_read_line, current_read_dataDAT);
-            I2C_DATA <= current_read_dataDAT;
+            I2C_DATA <= current_read_dataDAT; --Leer data del esclavo
       
             wait until DATA_WRITE /= "UUUUUUUU";
                 write (l, string'("DATA WRITE: "));
@@ -117,11 +117,9 @@ process
 
     SDA <= DATA_MASTER when (SLV_BUSY = '0') else 'Z';
 
-   -- I2C_ADDRESS <= "0110001";
-   -- I2C_DATA <= "01111010";
     SENT_ADDRESS <= "0110001"; --Address Mandado por Master
     SENT_DATA <= "11010001"; --Data Mandado por Master
-    SENT_RW <= '1'; --RW Mandado por el master
+    SENT_RW <= '0'; --RW Mandado por el master
 
 
 end arch;
