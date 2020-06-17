@@ -121,7 +121,7 @@ process
    -- I2C_DATA <= "01111010";
     SENT_ADDRESS <= "0110001"; --Address Mandado por Master
     SENT_DATA <= "11010001"; --Data Mandado por Master
-    SENT_RW <= '0'; --RW Mandado por el master
+    SENT_RW <= '1'; --RW Mandado por el master
 
 
 end arch;
