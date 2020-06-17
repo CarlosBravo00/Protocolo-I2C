@@ -87,28 +87,28 @@ begin
             end if;   
 
 
-        WHEN RDATA => --Read data
-            if incount < x"8" then --Lecutra de la data manda esclavo
-                SDA <= shift_dat(7);
-                shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
+         WHEN RDATA => --Read data
+             if incount < x"8" then --Lecutra de la data manda esclavo
+                 SDA <= shift_dat(7);
+                 shift_dat(7 downto 0) <= shift_dat(6 downto 0) & 'U' ;
                 incount <= incount + 1;
                 present <= RDATA;
 
-            else if incount = x"8" then --ACK
-                SLV_BUSY <= '1';    
-                incount <= incount + 1;
-                present <= RDATA;
+             else if incount = x"8" then --ACK
+                 SLV_BUSY <= '1';    
+                 incount <= incount + 1;
+                 present <= RDATA;
 
-            else  --STOP regresa a iddle 
-                if (SDA = '1') then --stop bit 
+             else  --STOP regresa a iddle 
+                 if (SDA = '1') then --stop bit 
                         incount <= x"0";
-                        present <= IDLE;
-                    else
-                        present <= RDATA;
-                    end if;
+                         present <= IDLE;
+                     else
+                         present <= RDATA;
+                     end if;
 
-                end if;
-            end if;
+                 end if;
+             end if;
                 
         when others => null; 
         end case;

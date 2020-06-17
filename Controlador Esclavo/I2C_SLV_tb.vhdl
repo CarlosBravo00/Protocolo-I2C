@@ -1,6 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+library std;
+use std.textio.all;
+use ieee.std_logic_textio.all;
+
 entity I2C_SLV_tb is
 end entity;
 
@@ -79,14 +83,40 @@ process
         wait;
     end process;
 
+    process 
+     variable l : line;
+     file fin : TEXT open READ_MODE is "Slaveinput.txt";
+     variable current_read_line : line;
+     variable current_read_field : string(1 to 4);
+     variable current_read_dataADD : std_logic_vector(6 downto 0);
+     variable current_read_dataDAT : std_logic_vector(7 downto 0);
+     variable current_write_line : line;
+    begin
+        readline(fin, current_read_line);
+        read(current_read_line, current_read_field);
+        read(current_read_line, current_read_dataADD);
+            I2C_ADDRESS <= current_read_dataADD; 
+        readline(fin, current_read_line);
+        read(current_read_line, current_read_field);
+        read(current_read_line, current_read_dataDAT);
+            I2C_DATA <= current_read_dataDAT;
+    
+        if (SENT_RW = '0') then    
+            wait until DATA_WRITE /= "UUUUUUUU";
+                write (l, string'("DATA WRITE: "));
+                write (l, DATA_WRITE);
+                writeline(output, l);
+        end if;
+        wait for 400* period;
+    end process;
+
     SDA <= DATA_MASTER when (SLV_BUSY = '1') else 'Z';
 
-    I2C_ADDRESS <= "0110001";
-    I2C_DATA <= "01111010";
-    SENT_ADDRESS <= "0110001";
-    SENT_DATA <= "11010001";
-    SENT_RW <= '0';
+   -- I2C_ADDRESS <= "0110001";
+   -- I2C_DATA <= "01111010";
+    SENT_ADDRESS <= "0110001"; --Address Mandado por Master
+    SENT_DATA <= "11010001"; --Data Mandado por Master
+    SENT_RW <= '0'; --RW Mandado por el master
 
-    --Output = DATA_WRITE
 
 end arch;
