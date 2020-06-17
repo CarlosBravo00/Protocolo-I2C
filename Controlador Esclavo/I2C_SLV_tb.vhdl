@@ -39,6 +39,7 @@ begin
 
 process
     begin
+        wait for 2*period;
         wait for (period / 2);
         SCL <= '1'; 
         DATA_MASTER <= '1';
@@ -72,9 +73,15 @@ process
             wait for (period / 2);
             SCL <= '0'; 
        end loop;
-       DATA_MASTER<='1';
         wait for (period / 2);
         SCL <= '1'; 
+        DATA_MASTER<='1';
+        if (SENT_RW = '1') then 
+            wait for (period / 2);
+            SCL <= '0'; 
+            wait for (period / 2);
+            SCL <= '1'; 
+        end if; 
         wait for (period / 2);
         SCL <= '0'; 
         wait for (period / 2);
@@ -108,7 +115,7 @@ process
          wait for 400* period;
     end process;
 
-    SDA <= DATA_MASTER when (SLV_BUSY = '1') else 'Z';
+    SDA <= DATA_MASTER when (SLV_BUSY = '0') else 'Z';
 
    -- I2C_ADDRESS <= "0110001";
    -- I2C_DATA <= "01111010";
