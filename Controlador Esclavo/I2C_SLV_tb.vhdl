@@ -100,14 +100,12 @@ process
         read(current_read_line, current_read_field);
         read(current_read_line, current_read_dataDAT);
             I2C_DATA <= current_read_dataDAT;
-    
-        if (SENT_RW = '0') then    
+      
             wait until DATA_WRITE /= "UUUUUUUU";
                 write (l, string'("DATA WRITE: "));
                 write (l, DATA_WRITE);
                 writeline(output, l);
-        end if;
-        wait for 400* period;
+         wait for 400* period;
     end process;
 
     SDA <= DATA_MASTER when (SLV_BUSY = '1') else 'Z';
