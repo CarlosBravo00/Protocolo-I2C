@@ -1,0 +1,7 @@
+v 4
+file . "I2C.vhdl" "73adfd1cccc647db63ec2897d31b60c47615ed23" "20200617000218.114":
+  entity i2c at 1( 0) + 0 on 53;
+  architecture arch of i2c at 21( 602) + 0 on 54;
+file . "I2C_tb.vhdl" "52e693f5e927fef934b7358d71fddc2a14a82100" "20200617001200.602":
+  entity i2c_tb at 1( 0) + 0 on 81;
+  architecture arch of i2c_tb at 11( 149) + 0 on 82;
